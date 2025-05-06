@@ -1,0 +1,942 @@
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import pandas as pd
+import numpy as np
+
+def create_inventory_distribution_chart(data, max_count=20):
+    """
+    Create a bar chart showing the distribution of SKU-Locations with different inventory levels
+    and their corresponding targets.
+    
+    Args:
+        data (pd.DataFrame): The processed data with inventory and target information
+        max_count (int): Maximum inventory count to show on x-axis
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object with the distribution chart
+    """
+    # Create a copy of the data to avoid modifying the original
+    df = data.copy()
+    
+    # Limit 'at site' and 'inventory_target' values to max_count for better visualization
+    df['at_site_capped'] = df['at site'].clip(upper=max_count)
+    df['inventory_target_capped'] = df['inventory_target'].clip(upper=max_count)
+    
+    # Count SKU-Locations with each inventory level
+    at_site_counts = df['at_site_capped'].value_counts().sort_index().reset_index()
+    at_site_counts.columns = ['inventory_level', 'sku_location_count']
+    at_site_counts['type'] = 'Current Inventory'
+    
+    # Count SKU-Locations with each target level
+    target_counts = df['inventory_target_capped'].value_counts().sort_index().reset_index()
+    target_counts.columns = ['inventory_level', 'sku_location_count']
+    target_counts['type'] = 'Target Inventory'
+    
+    # Combine the two datasets
+    combined_data = pd.concat([at_site_counts, target_counts])
+    
+    # Create the bar chart
+    fig = px.bar(
+        combined_data, 
+        x='inventory_level', 
+        y='sku_location_count', 
+        color='type',
+        barmode='group',
+        title='Distribution of SKU-Locations by Inventory Level',
+        labels={
+            'inventory_level': 'Inventory Count (capped at {})'.format(max_count),
+            'sku_location_count': 'Number of SKU-Locations',
+            'type': 'Inventory Type'
+        },
+        color_discrete_map={
+            'Current Inventory': '#1F6C6D',
+            'Target Inventory': '#FD604A'
+        }
+    )
+    
+    # Add annotation for values at max_count
+    max_level_current = df[df['at_site_capped'] == max_count].shape[0]
+    max_level_target = df[df['inventory_target_capped'] == max_count].shape[0]
+    
+    if max_level_current > 0:
+        fig.add_annotation(
+            x=max_count,
+            y=max_level_current,
+            text=f"{max_level_current} SKUs with {max_count}+ units",
+            showarrow=True,
+            arrowhead=1,
+            ax=0,
+            ay=-40
+        )
+    
+    if max_level_target > 0:
+        fig.add_annotation(
+            x=max_count,
+            y=max_level_target,
+            text=f"{max_level_target} SKUs with target of {max_count}+ units",
+            showarrow=True,
+            arrowhead=1,
+            ax=0,
+            ay=-80
+        )
+    
+    # Update layout
+    fig.update_layout(
+        xaxis=dict(
+            tickmode='linear',
+            tick0=0,
+            dtick=1
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.02,
+            xanchor='right',
+            x=1
+        )
+    )
+    
+    return fig
+
+def plot_cumulative_graph(hbt_results):
+    """
+    Create a cumulative graph showing the relationship between 
+    cumulative sales percentage and cumulative inventory percentage.
+    
+    Args:
+        hbt_results (dict): Results from the HBT analysis
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object
+    """
+    # Extract cumulative data from HBT results
+    cumulative_data = hbt_results['cumulative_data'].copy()
+    product_classification = hbt_results['product_classification'].copy()
+    
+    # Create the figure with a blank title (will be set by Streamlit outside)
+    fig = go.Figure()
+    
+    # Import at the function level to avoid circular imports
+    from modules.language_utils import get_text
+    
+    # Add lines for cumulative sales and inventory
+    fig.add_trace(go.Scatter(
+        x=cumulative_data['cumulative_product_pct'], 
+        y=cumulative_data['cumulative_sales_pct'],
+        mode='lines',
+        name=get_text('cumulative_sales'),
+        line=dict(color='#1F6C6D', width=3),
+        hoverinfo='x+y'
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=cumulative_data['cumulative_product_pct'], 
+        y=cumulative_data['cumulative_inventory_pct'],
+        mode='lines',
+        name=get_text('cumulative_inventory'),
+        line=dict(color='#FD604A', width=3),
+        hoverinfo='x+y'
+    ))
+    
+    # Add vertical lines at Head and Tail boundaries
+    # Find where Head products end based on inventory quantity
+    head_products = product_classification[product_classification['hbt_class'] == 'Head']
+    if not head_products.empty:
+        # Get the last head product's cumulative percentage
+        head_product_pct = head_products.iloc[-1]['cumulative_product_pct']
+        
+        # Add vertical line at Head threshold
+        fig.add_shape(
+            type='line',
+            x0=head_product_pct, y0=0,
+            x1=head_product_pct, y1=100,
+            line=dict(color='#1F6C6D', width=3, dash='solid')
+        )
+        
+        # Add "HEAD" label - more elegant and smaller
+        fig.add_annotation(
+            x=head_product_pct, 
+            y=105,  # Positioned just above the chart
+            text="HEAD",
+            showarrow=True,  # Add arrow
+            arrowhead=2,
+            arrowsize=0.8,
+            arrowwidth=1.5,
+            arrowcolor="#1F6C6D",
+            yanchor="bottom",
+            font=dict(
+                family="Arial, sans-serif",
+                color='#1F6C6D', 
+                size=14,  # Smaller elegant text
+                weight='bold'
+            ),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="#1F6C6D",
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.9,  # Slightly transparent
+            standoff=5  # Smaller standoff for elegance
+        )
+    
+    # Find where Tail products start based on inventory quantity
+    belly_products = product_classification[product_classification['hbt_class'] == 'Belly']
+    tail_products = product_classification[product_classification['hbt_class'] == 'Tail']
+    
+    if not tail_products.empty:
+        # Find where Tail starts - it's the first Tail product's cumulative percentage
+        # If there are Belly products, take the last Belly product's percentage
+        if not belly_products.empty:
+            tail_start_pct = belly_products.iloc[-1]['cumulative_product_pct']
+        else:
+            # If no Belly products, take the first Tail product's percentage
+            tail_start_pct = tail_products.iloc[0]['cumulative_product_pct']
+        
+        # Add vertical line at Tail threshold
+        fig.add_shape(
+            type='line',
+            x0=tail_start_pct, y0=0,
+            x1=tail_start_pct, y1=100,
+            line=dict(color='#FD604A', width=3, dash='solid')
+        )
+        
+        # Add "TAIL" label - more elegant and smaller
+        fig.add_annotation(
+            x=tail_start_pct, 
+            y=105,  # Positioned just above the chart
+            text="TAIL",
+            showarrow=True,  # Add arrow
+            arrowhead=2,
+            arrowsize=0.8,
+            arrowwidth=1.5,
+            arrowcolor="#FD604A",
+            yanchor="bottom",
+            font=dict(
+                family="Arial, sans-serif",
+                color='#FD604A', 
+                size=14,  # Smaller elegant text
+                weight='bold'
+            ),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="#FD604A",
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.9,  # Slightly transparent
+            standoff=5  # Smaller standoff for elegance
+        )
+    
+    # Update layout with modern styling
+    fig.update_layout(
+        xaxis_title={
+            'text': get_text('cumulative_inventory_quantity_percentage'),
+            'font': dict(
+                family="Arial, sans-serif",
+                size=16,
+                color="#424242"
+            )
+        },
+        yaxis_title={
+            'text': get_text('cumulative_percentage'),
+            'font': dict(
+                family="Arial, sans-serif",
+                size=16,
+                color="#424242"
+            )
+        },
+        legend=dict(
+            orientation="h",
+            yanchor="top", 
+            y=-0.15,   # Position below the chart
+            xanchor="center",
+            x=0.5,     # Center the legend
+            font=dict(
+                family="Arial, sans-serif",
+                size=14,
+                color="#212121"
+            ),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="rgba(0,0,0,0.1)",
+            borderwidth=1
+        ),
+        height=600,  # Increased height for better visualization
+        margin=dict(l=30, r=30, t=70, b=70),  # Equal padding for more elegant spacing
+        paper_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        plot_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        font=dict(
+            family="Arial, sans-serif"
+        ),
+        hoverlabel=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            font_size=14,
+            font_family="Arial, sans-serif"
+        )
+    )
+    
+    # Update axes with modern styling
+    fig.update_xaxes(
+        range=[0, 120],  # Extended range to ensure labels don't get cut off
+        showgrid=True,
+        gridcolor='rgba(0, 0, 0, 0.1)',
+        gridwidth=1,
+        zeroline=False,
+        showline=True,
+        linecolor='rgba(0, 0, 0, 0.3)',
+        linewidth=2,
+        tickfont=dict(
+            family="Arial, sans-serif",
+            size=12,
+            color="#424242"
+        )
+    )
+    
+    fig.update_yaxes(
+        range=[0, 120],  # Extended range to ensure labels don't get cut off
+        showgrid=True,
+        gridcolor='rgba(0, 0, 0, 0.1)',
+        gridwidth=1,
+        zeroline=False,
+        showline=True,
+        linecolor='rgba(0, 0, 0, 0.3)',
+        linewidth=2,
+        tickfont=dict(
+            family="Arial, sans-serif",
+            size=12,
+            color="#424242"
+        )
+    )
+    
+    # Format percentages in hover templates to show only one decimal place
+    for trace in fig.data:
+        trace.hovertemplate = '%{y:.1f}%<br>%{x:.1f}%<extra></extra>'
+    
+    return fig
+
+def plot_hbt_distribution(hbt_results):
+    """
+    Create a bar chart showing the distribution of products, sales, and inventory
+    across Head, Belly, and Tail categories.
+    
+    Args:
+        hbt_results (dict): Results from the HBT analysis
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object
+    """
+    # Import at the function level to avoid circular imports
+    from modules.language_utils import get_text
+    
+    # Extract summary data
+    summary = hbt_results['summary'].copy()
+    
+    # Ensure summary has all expected HBT classes
+    expected_classes = ['Head', 'Belly', 'Tail']
+    for cls in expected_classes:
+        if cls not in summary['hbt_class'].values:
+            # Add missing class with zero values
+            summary = pd.concat([summary, pd.DataFrame({
+                'hbt_class': [cls],
+                'product_count': [0],
+                'sales_value': [0],
+                'inventory_value': [0],
+                'weighted_sales': [0],
+                'total_inventory': [0],
+                'inventory_count': [0],
+                'product_count_pct': [0],
+                'sales_value_pct': [0],
+                'inventory_value_pct': [0]
+            })], ignore_index=True)
+    
+    # Recalculate percentages from scratch to ensure correctness
+    total_products = summary['product_count'].sum()
+    total_sales = summary['sales_value'].sum()
+    total_inventory = summary['inventory_value'].sum()
+    
+    if total_products > 0:
+        summary['product_count_pct'] = (summary['product_count'] / total_products) * 100
+    if total_sales > 0:
+        summary['sales_value_pct'] = (summary['sales_value'] / total_sales) * 100
+    if total_inventory > 0:
+        summary['inventory_value_pct'] = (summary['inventory_value'] / total_inventory) * 100
+    
+    # Create a new DataFrame specifically for plotting
+    products_data = pd.DataFrame({
+        'HBT Class': summary['hbt_class'],
+        'Metric': get_text('products'),
+        'Percentage': summary['product_count_pct']
+    })
+    
+    sales_data = pd.DataFrame({
+        'HBT Class': summary['hbt_class'],
+        'Metric': get_text('sales'),
+        'Percentage': summary['sales_value_pct']
+    })
+    
+    inventory_data = pd.DataFrame({
+        'HBT Class': summary['hbt_class'],
+        'Metric': get_text('inventory_units'),
+        'Percentage': summary['inventory_value_pct']
+    })
+    
+    # Combine the data
+    plot_data = pd.concat([products_data, sales_data, inventory_data], ignore_index=True)
+    
+    # Define colors for each HBT class
+    color_map = {"Head": "#1F6C6D", "Belly": "#1A314B", "Tail": "#FD604A"}
+    
+    # Create the figure
+    fig = px.bar(
+        plot_data,
+        x='HBT Class',
+        y='Percentage',
+        color='Metric',
+        barmode='group',
+        text_auto='.1f',
+        color_discrete_sequence=['#1F6C6D', '#1A314B', '#E8BFE6'],
+    )
+    
+    # Update layout with modern styling
+    fig.update_layout(
+        xaxis_title='',
+        yaxis_title={
+            'text': get_text('percentage'),
+            'font': dict(
+                family="Arial, sans-serif",
+                size=16,
+                color="#424242"
+            )
+        },
+        legend_title_text='',
+        legend=dict(
+            orientation="h",
+            yanchor="top", 
+            y=-0.15,   # Position below the chart
+            xanchor="center",
+            x=0.5,     # Center the legend
+            font=dict(
+                family="Arial, sans-serif",
+                size=14,
+                color="#212121"
+            ),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="rgba(0,0,0,0.1)",
+            borderwidth=1
+        ),
+        height=600,  # Increased height for better visualization
+        margin=dict(l=30, r=30, t=70, b=70),  # Equal padding for more elegant spacing
+        paper_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        plot_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        hoverlabel=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            font_size=14,
+            font_family="Arial, sans-serif"
+        )
+    )
+    
+    # Update y-axis to show percentages and limit to 100%
+    fig.update_yaxes(ticksuffix="%", range=[0, 105], tickformat=".1f")
+    
+    # Format hover template to show one decimal place for percentages
+    fig.update_traces(hovertemplate='%{y:.1f}%<extra></extra>')
+    
+    # Set the x-axis tick values and text
+    fig.update_xaxes(
+        ticktext=summary['hbt_class'].tolist(),
+        tickvals=list(range(len(summary)))
+    )
+    
+    # Add custom styling for each bar based on HBT class
+    for i, cls in enumerate(summary['hbt_class']):
+        color = color_map.get(cls, "#000000")
+        # Apply styling through annotations instead of tickfont color
+        fig.add_annotation(
+            x=i,
+            y=-4,  # Position below the x-axis
+            text=cls,
+            showarrow=False,
+            font=dict(color=color, size=14, weight='bold'),
+            xref="x",
+            yref="y"
+        )
+    
+    return fig
+
+def create_inventory_location_chart(location_inventory):
+    """
+    Create a chart showing inventory distribution across locations.
+    
+    Args:
+        location_inventory (pd.DataFrame): DataFrame with inventory data by location
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object
+    """
+    # Import at the function level to avoid circular imports
+    from modules.language_utils import get_text
+    
+    if location_inventory.empty:
+        # Create empty figure with message if no data
+        fig = go.Figure()
+        fig.add_annotation(
+            text=get_text('no_location_data'),
+            showarrow=False,
+            font=dict(size=20)
+        )
+        return fig
+    
+    # Sort by total inventory value
+    sorted_data = location_inventory.sort_values('total_value', ascending=True)
+    
+    # Create stacked bar chart
+    fig = go.Figure()
+    
+    # Add trace for inventory at site
+    if 'at site' in sorted_data.columns:
+        fig.add_trace(go.Bar(
+            y=sorted_data['location_name'],
+            x=sorted_data['at site'],
+            name=get_text('at_store'),
+            orientation='h',
+            marker=dict(color='#1F6C6D')
+        ))
+    
+    # Add trace for inventory in transit
+    if 'at transit' in sorted_data.columns:
+        fig.add_trace(go.Bar(
+            y=sorted_data['location_name'],
+            x=sorted_data['at transit'],
+            name=get_text('in_transit'),
+            orientation='h',
+            marker=dict(color='#FD604A')
+        ))
+    
+    # Add trace for inventory at warehouse
+    if 'at wh' in sorted_data.columns:
+        fig.add_trace(go.Bar(
+            y=sorted_data['location_name'],
+            x=sorted_data['at wh'],
+            name=get_text('at_warehouse'),
+            orientation='h',
+            marker=dict(color='#E8BFE6')
+        ))
+    
+    # Update layout with modern styling
+    fig.update_layout(
+        xaxis_title={
+            'text': get_text('units_in_inventory'),
+            'font': dict(
+                family="Arial, sans-serif",
+                size=16,
+                color="#424242"
+            )
+        },
+        yaxis_title='',
+        barmode='stack',
+        height=max(500, len(sorted_data) * 40),  # Increased height for better visualization
+        margin=dict(l=30, r=30, t=70, b=70),  # Equal padding for more elegant spacing
+        paper_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        plot_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        legend=dict(
+            orientation="h",
+            yanchor="top", 
+            y=-0.15,   # Position below the chart
+            xanchor="center",
+            x=0.5,     # Center the legend
+            font=dict(
+                family="Arial, sans-serif",
+                size=14,
+                color="#212121"
+            ),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="rgba(0,0,0,0.1)",
+            borderwidth=1
+        ),
+        hoverlabel=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            font_size=14,
+            font_family="Arial, sans-serif"
+        ),
+        hovermode="closest"
+    )
+    
+    # Format tooltips to show whole numbers
+    for trace in fig.data:
+        trace.hovertemplate = '%{y}<br>%{x:,.0f} ' + get_text('units') + '<extra></extra>'
+    
+    return fig
+
+def plot_sales_trends(data, group_by):
+    """
+    Create a visualization of sales trends grouped by the specified dimensions.
+    
+    Args:
+        data (pd.DataFrame): The processed data with sales information
+        group_by (list): List of columns to group by
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object
+    """
+    # Import at the function level to avoid circular imports
+    from modules.language_utils import get_text
+    
+    # Make sure all specified group_by columns exist in the data
+    valid_group_by = [col for col in group_by if col in data.columns]
+    
+    if not valid_group_by:
+        # Create empty figure with message if no valid group_by columns
+        fig = go.Figure()
+        fig.add_annotation(
+            text=get_text('no_valid_grouping'),
+            showarrow=False,
+            font=dict(size=20)
+        )
+        return fig
+    
+    # Group data and calculate sales metrics
+    grouped_data = data.groupby(valid_group_by).agg({
+        'sales_30_days': 'sum',
+        'sales_60_days': 'sum',
+        'sales_90_days': 'sum',
+        'catalog_price': 'mean'
+    }).reset_index()
+    
+    # Calculate sales value for each period
+    grouped_data['sales_value_30'] = grouped_data['sales_30_days'] * grouped_data['catalog_price']
+    grouped_data['sales_value_60'] = grouped_data['sales_60_days'] * grouped_data['catalog_price']
+    grouped_data['sales_value_90'] = grouped_data['sales_90_days'] * grouped_data['catalog_price']
+    
+    # Sort by 90-day sales value
+    grouped_data = grouped_data.sort_values('sales_value_90', ascending=False)
+    
+    # Limit to top 15 for readability
+    top_data = grouped_data.head(15)
+    
+    # Create a concatenated group label if multiple grouping dimensions
+    if len(valid_group_by) > 1:
+        top_data['group_label'] = top_data[valid_group_by].apply(
+            lambda row: ' | '.join(str(val) for val in row),
+            axis=1
+        )
+        x_column = 'group_label'
+    else:
+        x_column = valid_group_by[0]
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # Add traces for each sales period
+    fig.add_trace(go.Bar(
+        x=top_data[x_column],
+        y=top_data['sales_30_days'],
+        name=get_text('sales_30_days'),
+        marker_color='#1F6C6D'
+    ))
+    
+    fig.add_trace(go.Bar(
+        x=top_data[x_column],
+        y=top_data['sales_60_days'],
+        name=get_text('sales_60_days'),
+        marker_color='#FD604A'
+    ))
+    
+    fig.add_trace(go.Bar(
+        x=top_data[x_column],
+        y=top_data['sales_90_days'],
+        name=get_text('sales_90_days'),
+        marker_color='#1A314B'
+    ))
+    
+    # Update layout with modern styling
+    fig.update_layout(
+        xaxis_title='',
+        yaxis_title={
+            'text': get_text('units_sold'),
+            'font': dict(
+                family="Arial, sans-serif",
+                size=16,
+                color="#424242"
+            )
+        },
+        barmode='group',
+        height=600,  # Increased height for better visualization
+        margin=dict(l=30, r=30, t=70, b=70),  # Equal padding for more elegant spacing
+        paper_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        plot_bgcolor='rgba(240, 242, 245, 0.9)',  # Light background
+        legend=dict(
+            orientation="h",
+            yanchor="top", 
+            y=-0.15,   # Position below the chart
+            xanchor="center",
+            x=0.5,     # Center the legend
+            font=dict(
+                family="Arial, sans-serif",
+                size=14,
+                color="#212121"
+            ),
+            bgcolor="rgba(255,255,255,0.8)",
+            bordercolor="rgba(0,0,0,0.1)",
+            borderwidth=1
+        ),
+        hoverlabel=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            font_size=14,
+            font_family="Arial, sans-serif"
+        )
+    )
+    
+    # Rotate x-axis labels if there are many categories
+    if len(top_data) > 5:
+        fig.update_layout(xaxis_tickangle=-45)
+    
+    # Format tooltips to show whole numbers for units
+    for trace in fig.data:
+        trace.hovertemplate = '%{x}<br>%{y:,.0f} ' + get_text('units') + '<extra></extra>'
+    
+    return fig
+
+def create_store_comparison_chart(location_data):
+    """
+    Create a chart comparing key metrics across all stores.
+    
+    Args:
+        location_data (pd.DataFrame): DataFrame with aggregated data by location
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object
+    """
+    # Import at the function level to avoid circular imports
+    from modules.language_utils import get_text
+    
+    # Create a copy of the data
+    df = location_data.copy()
+    
+    # Sort stores by inventory target percentage for consistent display
+    df = df.sort_values('target_percentage', ascending=False)
+    
+    # Create the inventory chart first
+    fig_inventory = go.Figure()
+    
+    # Add inventory traces
+    fig_inventory.add_trace(
+        go.Bar(
+            name=get_text('current_inventory'),
+            x=df['location_name'],
+            y=df['at site'],
+            marker_color='#1F6C6D'
+        )
+    )
+    
+    fig_inventory.add_trace(
+        go.Bar(
+            name=get_text('target_inventory'),
+            x=df['location_name'],
+            y=df['inventory_target'],
+            marker_color='#FD604A'
+        )
+    )
+    
+    # Filter out stores with zero sales for inventory days chart
+    # We don't want to show "unlimited" days on the chart
+    df_with_sales = df[df['daily_sales_rate'] > 0].copy()
+    
+    # Only add the inventory days bar if there are stores with sales
+    if len(df_with_sales) > 0:
+        fig_inventory.add_trace(
+            go.Bar(
+                name=get_text('inventory_days'),
+                x=df_with_sales['location_name'],
+                y=df_with_sales['inventory_days'],
+                yaxis='y2',
+                marker_color='#1A314B',
+                width=0.4
+            )
+        )
+    
+    # Configure the inventory chart layout
+    fig_inventory.update_layout(
+        height=400, 
+        barmode='group',
+        yaxis=dict(
+            title=dict(text=get_text('inventory_units')),
+            side="left",
+            showgrid=True
+        ),
+        yaxis2=dict(
+            title=dict(text=get_text('inventory_days'), font=dict(color='#1A314B')),
+            side="right",
+            overlaying="y",
+            showgrid=False,
+            range=[0, 85],  # Fixed range to max 85 days (for 67 max value + 25%)
+            tickfont=dict(color='#1A314B')
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.05,  # Positioned above the chart
+            xanchor="right",
+            x=1.0,  # Right aligned
+            groupclick="toggleitem",
+            traceorder="normal"
+        ),
+        margin=dict(l=50, r=50, t=80, b=50),  # More top margin to fit the legend
+        # Remove annotations completely
+    )
+    
+    # Create the sales chart
+    fig_sales = go.Figure()
+    
+    # Add sales traces with vibrant colors
+    fig_sales.add_trace(
+        go.Bar(
+            name=get_text('sales_30_days'),
+            x=df['location_name'],
+            y=df['sales_30_days'],
+            marker_color='#E8BFE6'
+        )
+    )
+    
+    fig_sales.add_trace(
+        go.Bar(
+            name=get_text('sales_60_days'),
+            x=df['location_name'],
+            y=df['sales_60_days'],
+            marker_color='#1F6C6D'
+        )
+    )
+    
+    fig_sales.add_trace(
+        go.Bar(
+            name=get_text('sales_90_days'),
+            x=df['location_name'],
+            y=df['sales_90_days'],
+            marker_color='#FD604A'
+        )
+    )
+    
+    # Configure the sales chart layout
+    fig_sales.update_layout(
+        height=350,
+        barmode='group',
+        yaxis=dict(title=dict(text=get_text('sales_units'))),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.05,  # Positioned above the chart
+            xanchor="right",
+            x=1.0,  # Right aligned
+            groupclick="toggleitem",
+            traceorder="normal"
+        ),
+        margin=dict(l=50, r=50, t=80, b=50),  # More top margin to fit the legend
+        # Remove annotations completely
+    )
+    
+    # Set hover templates for inventory chart
+    fig_inventory.data[0].hovertemplate = '<b>%{x}</b><br><b>' + get_text('current_inventory') + ':</b> %{y:,.0f} ' + get_text('units') + '<extra></extra>'
+    fig_inventory.data[1].hovertemplate = '<b>%{x}</b><br><b>' + get_text('target_inventory') + ':</b> %{y:,.0f} ' + get_text('units') + '<extra></extra>'
+    
+    # Only set the hover template for inventory days if we added that trace
+    if len(df_with_sales) > 0:
+        # Create a custom hover template for inventory days
+        # Since we only include stores with sales, we don't need to check for "unlimited"
+        fig_inventory.data[2].hovertemplate = '<b>%{x}</b><br><b>' + get_text('inventory_days') + ':</b> %{y:.0f} ' + get_text('days') + '<extra></extra>'
+    
+    # Set hover templates for sales chart
+    fig_sales.data[0].hovertemplate = '<b>%{x}</b><br><b>' + get_text('sales_30_days') + ':</b> %{y:,.0f} ' + get_text('units') + '<extra></extra>'
+    fig_sales.data[1].hovertemplate = '<b>%{x}</b><br><b>' + get_text('sales_60_days') + ':</b> %{y:,.0f} ' + get_text('units') + '<extra></extra>'
+    fig_sales.data[2].hovertemplate = '<b>%{x}</b><br><b>' + get_text('sales_90_days') + ':</b> %{y:,.0f} ' + get_text('units') + '<extra></extra>'
+    
+    # Return both figures as a tuple
+    return (fig_inventory, fig_sales)
+
+def create_store_hbt_comparison(store_hbt_results):
+    """
+    Create a comparison of HBT metrics across stores.
+    
+    Args:
+        store_hbt_results (dict): Dictionary mapping store names to HBT analysis results
+        
+    Returns:
+        plotly.graph_objects.Figure: Plotly figure object
+    """
+    # Import at the function level to avoid circular imports
+    from modules.language_utils import get_text
+    
+    # Prepare data for comparison
+    stores = []
+    head_pcts = []
+    belly_pcts = []
+    tail_pcts = []
+    
+    # Extract HBT percentage data from each store
+    for store, hbt_result in store_hbt_results.items():
+        summary = hbt_result['summary']
+        
+        # Get percentages for each class
+        head_pct = summary[summary['hbt_class'] == 'Head']['inventory_value_pct'].values[0] if 'Head' in summary['hbt_class'].values else 0
+        belly_pct = summary[summary['hbt_class'] == 'Belly']['inventory_value_pct'].values[0] if 'Belly' in summary['hbt_class'].values else 0
+        tail_pct = summary[summary['hbt_class'] == 'Tail']['inventory_value_pct'].values[0] if 'Tail' in summary['hbt_class'].values else 0
+        
+        stores.append(store)
+        head_pcts.append(head_pct)
+        belly_pcts.append(belly_pct)
+        tail_pcts.append(tail_pct)
+    
+    # Create the stacked bar chart
+    fig = go.Figure()
+    
+    # Add traces for Head, Belly, Tail
+    fig.add_trace(go.Bar(
+        name=get_text('head'),
+        x=stores,
+        y=head_pcts,
+        marker_color='#1F6C6D'
+    ))
+    
+    fig.add_trace(go.Bar(
+        name=get_text('belly'),
+        x=stores,
+        y=belly_pcts,
+        marker_color='#E8BFE6'
+    ))
+    
+    fig.add_trace(go.Bar(
+        name=get_text('tail'),
+        x=stores,
+        y=tail_pcts,
+        marker_color='#FD604A'
+    ))
+    
+    # Update layout
+    fig.update_layout(
+        xaxis=dict(title=dict(text=get_text('store'))),
+        yaxis=dict(title=dict(text=get_text('inventory_value_percentage'))),
+        barmode='stack',
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.05,  # Positioned above the chart
+            xanchor="right",
+            x=1.0,  # Right aligned
+            groupclick="toggleitem",  # Make each item in the legend clickable
+            traceorder="normal"
+        ),
+        height=450,  # Reduced height to minimize space between heading and chart
+        margin=dict(l=50, r=50, t=80, b=50),  # More top margin to fit the legend
+        # Remove annotations completely
+        # Improve tooltip display
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=12,
+            font_family="Arial",
+            bordercolor="#dadada",
+            namelength=-1  # No truncation of trace names
+        ),
+        hovermode="closest"
+    )
+    
+    # Update hover templates for better information
+    for i, trace in enumerate(fig.data):
+        category = trace.name
+        fig.data[i].hovertemplate = '<b>%{x}</b><br>%{y:.1f}% ' + get_text('of_inventory_in') + ' <b>' + category + '</b> ' + get_text('category') + '<extra></extra>'
+    
+    return fig

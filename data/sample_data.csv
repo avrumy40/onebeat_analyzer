@@ -1,0 +1,16 @@
+sku,product_name,location_name,at_site,at_transit,at_wh,catalog_price,sales_30_days,sales_60_days,sales_90_days
+SKU001,Product A,Store 1,120,10,50,25.99,45,85,130
+SKU002,Product B,Store 1,80,5,30,15.50,60,110,170
+SKU003,Product C,Store 1,50,0,20,45.75,10,15,25
+SKU004,Product D,Store 1,200,15,100,9.99,90,180,270
+SKU005,Product E,Store 1,30,2,10,199.99,5,8,12
+SKU001,Product A,Store 2,80,5,40,25.99,55,105,160
+SKU002,Product B,Store 2,60,0,20,15.50,40,75,115
+SKU003,Product C,Store 2,70,5,30,45.75,15,25,40
+SKU004,Product D,Store 2,150,10,80,9.99,70,140,210
+SKU005,Product E,Store 2,20,0,5,199.99,3,5,8
+SKU001,Product A,Store 3,100,8,45,25.99,50,95,145
+SKU002,Product B,Store 3,70,5,25,15.50,45,90,135
+SKU003,Product C,Store 3,60,0,25,45.75,12,20,32
+SKU004,Product D,Store 3,180,12,90,9.99,85,165,250
+SKU005,Product E,Store 3,25,0,8,199.99,4,7,10

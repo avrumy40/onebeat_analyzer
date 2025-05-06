@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
+  <style>
+    .text { font: bold 24px sans-serif; fill: #333; }
+    .subtitle { font: 16px sans-serif; fill: #666; }
+    .chart-bar { fill: #4A90E2; }
+    .chart-bar-2 { fill: #FF6B6B; }
+    .chart-line { stroke: #4CAF50; stroke-width: 4; fill: none; }
+    .icon { fill: #333; }
+  </style>
+  
+  <!-- Background rectangle -->
+  <rect width="400" height="200" fill="#F8F9FA" rx="10" ry="10" />
+  
+  <!-- Chart icon elements -->
+  <g transform="translate(50, 80)">
+    <!-- Bar chart -->
+    <rect class="chart-bar" x="10" y="0" width="20" height="60" />
+    <rect class="chart-bar" x="40" y="20" width="20" height="40" />
+    <rect class="chart-bar" x="70" y="10" width="20" height="50" />
+    
+    <!-- Line chart overlay -->
+    <path class="chart-line" d="M20,10 L50,30 L80,20" />
+    
+    <!-- HBT indicators -->
+    <rect class="chart-bar-2" x="110" y="0" width="20" height="20" />
+    <rect class="chart-bar" x="110" y="25" width="20" height="20" />
+    <rect class="chart-bar-2" x="110" y="50" width="20" height="10" />
+    
+    <!-- Legend -->
+    <text x="135" y="15" class="subtitle">Head</text>
+    <text x="135" y="40" class="subtitle">Belly</text>
+    <text x="135" y="60" class="subtitle">Tail</text>
+  </g>
+  
+  <!-- Title and subtitle -->
+  <text x="200" y="50" class="text" text-anchor="middle">Inventory Analytics Dashboard</text>
+  <text x="200" y="75" class="subtitle" text-anchor="middle">Head-Belly-Tail Analysis</text>
+  
+  <!-- Bottom text -->
+  <text x="200" y="170" class="subtitle" text-anchor="middle">Optimize inventory · Track sales · Increase profits</text>
+</svg>
