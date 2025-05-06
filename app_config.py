@@ -56,22 +56,7 @@ REQUIRED_COLUMNS = {
         "required": False,
         "aliases": ["purchase_cost", "supplier_price", "vendor_cost"]
     },
-    "brands": {
-        "description": "Brand of the product",
-        "required": False
-    },
-    "category": {
-        "description": "Product category",
-        "required": False
-    },
-    "styles": {
-        "description": "Product style (e.g. MANGA CORTA, MANGA LARGA)",
-        "required": False
-    },
-    "seasons": {
-        "description": "Seasonal classification (e.g. VERANO 2024)",
-        "required": False
-    },
+
     "size": {
         "description": "Product size",
         "required": False

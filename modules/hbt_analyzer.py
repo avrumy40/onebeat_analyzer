@@ -80,9 +80,7 @@ def perform_hbt_analysis(data):
         'sales_value': 'sum',
         'total_inventory': 'sum',
         'inventory_value': 'sum',
-        'catalog_price': 'first',
-        'brands': 'first',
-        'category': 'first'
+        'catalog_price': 'first'
     }
     
     # Add inventory location columns if they exist

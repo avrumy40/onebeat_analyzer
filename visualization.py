@@ -349,14 +349,16 @@ def plot_hbt_distribution(hbt_results):
     # Recalculate percentages from scratch to ensure correctness
     total_products = summary['product_count'].sum()
     total_sales = summary['sales_value'].sum()
-    total_inventory = summary['inventory_value'].sum()
+    total_inventory_value = summary['inventory_value'].sum()
+    total_inventory_units = summary['total_inventory'].sum()
     
     if total_products > 0:
         summary['product_count_pct'] = (summary['product_count'] / total_products) * 100
     if total_sales > 0:
         summary['sales_value_pct'] = (summary['sales_value'] / total_sales) * 100
-    if total_inventory > 0:
-        summary['inventory_value_pct'] = (summary['inventory_value'] / total_inventory) * 100
+    if total_inventory_units > 0:
+        # This ensures consistency with the cumulative graph which uses quantity
+        summary['inventory_value_pct'] = (summary['total_inventory'] / total_inventory_units) * 100
     
     # Create a new DataFrame specifically for plotting
     products_data = pd.DataFrame({
@@ -374,7 +376,7 @@ def plot_hbt_distribution(hbt_results):
     inventory_data = pd.DataFrame({
         'HBT Class': summary['hbt_class'],
         'Metric': get_text('inventory_units'),
-        'Percentage': summary['inventory_value_pct']
+        'Percentage': summary['inventory_value_pct']  # This now uses total_inventory (units) instead of value
     })
     
     # Combine the data

@@ -41,7 +41,7 @@ def display_column_mapper(user_columns, required_columns):
                 "Sales Data": ["sales_30_days", "sales_60_days", "sales_90_days"]
             },
             "3": {
-                "Product Information": ["brands", "category", "seasons", "styles", "size"],
+                "Product Information": ["size"],
                 "Location Data": ["location_name"]
             }
         }

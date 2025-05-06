@@ -108,7 +108,7 @@ def process_data(data, column_mapping):
             print(f"Used {cost_columns[0]} as cost")
     
     # Convert object types to strings to avoid potential issues
-    string_cols = ['sku_id', 'product_name', 'brands', 'category', 'styles', 'seasons']
+    string_cols = ['sku_id', 'product_name']
     for col in string_cols:
         if col in processed_data.columns:
             processed_data[col] = processed_data[col].astype(str)
@@ -176,11 +176,7 @@ def group_by_product(data):
         'at site': 'sum',
         'at transit': 'sum',
         'at wh': 'sum',
-        'catalog_price': 'mean',
-        'brands': 'first',
-        'category': 'first',
-        'styles': 'first',
-        'seasons': 'first'
+        'catalog_price': 'mean'
     }
     
     # Add cost if it exists
