@@ -1,6 +1,6 @@
 """
 Translations module for multilingual support.
-Contains dictionaries with text in English and Spanish (MX).
+Contains dictionaries with text in English and Spanish.
 """
 
 # English translations (default)
@@ -10,7 +10,7 @@ en_translations = {
     "upload_data": "Upload Your Data",
     "language_selector": "Language / Idioma",
     "english": "English",
-    "spanish": "Español (MX)",
+    "spanish": "Español",
     "sidebar_title": "Navigation",
     "filter_options": "Filter Options",
     "product_categories": "Product Categories",
@@ -143,14 +143,14 @@ en_translations = {
     "calculation_error": "Error in calculations. Please check your data."
 }
 
-# Spanish (Mexico) translations
+# Spanish translations
 es_mx_translations = {
     # Navigation and UI
     "app_title": "Panel de Análisis de Inventario",
-    "upload_data": "Cargar Sus Datos",
+    "upload_data": "Cargar Datos",
     "language_selector": "Language / Idioma",
-    "english": "English",
-    "spanish": "Español (MX)",
+    "english": "Inglés",
+    "spanish": "Español",
     "sidebar_title": "Navegación",
     "filter_options": "Opciones de Filtro",
     "product_categories": "Categorías de Productos",
@@ -158,30 +158,30 @@ es_mx_translations = {
     "brands": "Marcas",
     "home_page": "Inicio",
     "hbt_analysis": "Análisis HBT",
-    "misdistribution": "Análisis de Mala Distribución",
+    "misdistribution": "Oportunidades de Distribución",
     "store_analysis": "Análisis de Tiendas",
     "insights": "Estadísticas",
     
     # Home Page
-    "welcome_title": "Bienvenido al Panel de Análisis de Inventario",
-    "welcome_text": "Esta herramienta le ayuda a analizar sus datos de inventario en múltiples ubicaciones utilizando la categorización avanzada Head-Belly-Tail (HBT).",
+    "welcome_title": "Bienvenido al Panel de Inventario",
+    "welcome_text": "Esta herramienta le permite analizar sus datos de inventario en múltiples ubicaciones mediante la categorización avanzada Head-Belly-Tail (HBT).",
     "get_started": "Para comenzar, cargue su archivo CSV con datos de inventario y ventas.",
     "data_requirements": "Sus datos deben incluir:",
     "upload_csv": "Cargar Archivo CSV",
-    "map_columns": "Mapear Columnas",
+    "map_columns": "Asignar Columnas",
     
     # Column Mapping Page
-    "mapping_title": "Mapeo de Columnas",
-    "mapping_instructions": "Haga coincidir las columnas de su CSV con los campos requeridos a continuación:",
-    "mapping_help": "Para cada campo requerido, seleccione la columna correspondiente de su CSV.",
-    "confirm_mapping": "Confirmar Mapeo",
+    "mapping_title": "Asignación de Columnas",
+    "mapping_instructions": "Coincida las columnas de su archivo CSV con los campos requeridos a continuación:",
+    "mapping_help": "Para cada campo, seleccione la columna correspondiente en su archivo CSV.",
+    "confirm_mapping": "Confirmar Asignación",
     "required_column": "Columna Requerida",
     "your_column": "Su Columna",
     "description": "Descripción",
     
     # Required Fields
     "product_id": "ID de Producto",
-    "product_name": "Nombre de Producto",
+    "product_name": "Nombre del Producto",
     "sku": "SKU",
     "location_id": "ID de Ubicación",
     "location_name": "Nombre de Ubicación",
@@ -192,78 +192,78 @@ es_mx_translations = {
     "sales_90_days": "Ventas (90 Días)",
     
     # Field Descriptions
-    "product_id_desc": "Identificador único para cada producto",
-    "product_name_desc": "Nombre o descripción del producto",
-    "sku_desc": "Unidad de Mantenimiento de Stock - identificador único para cada variante de producto",
-    "location_id_desc": "Identificador único para cada ubicación de tienda o almacén",
-    "location_name_desc": "Nombre de la ubicación de tienda o almacén",
-    "inventory_desc": "Recuento actual de inventario (unidades) en cada ubicación",
-    "cost_desc": "Costo por unidad (en moneda)",
-    "sales_30_days_desc": "Unidades vendidas en los últimos 30 días",
-    "sales_60_days_desc": "Unidades vendidas en los últimos 60 días",
-    "sales_90_days_desc": "Unidades vendidas en los últimos 90 días",
+    "product_id_desc": "Código único del producto",
+    "product_name_desc": "Nombre del producto",
+    "sku_desc": "Descripción del producto",
+    "location_id_desc": "Codigo de la ubicación (tienda o CD o almacén o bodega o Deposito)",
+    "location_name_desc": "Nombre de la ubicación (tienda o CD o almacén o bodega o Deposito).",
+    "inventory_desc": "Cantidad actual en inventario en cada ubicación.",
+    "cost_desc": "Costo por unidad (en moneda local).",
+    "sales_30_days_desc": "Unidades vendidas en los últimos 30 días.",
+    "sales_60_days_desc": "Unidades vendidas en los últimos 60 días.",
+    "sales_90_days_desc": "Unidades vendidas en los últimos 90 días.",
     
     # HBT Analysis Tab
     "hbt_title": "Análisis Head-Belly-Tail",
-    "hbt_description": "Este análisis categoriza sus productos en Head (30% superior de ventas), Belly (medio) y Tail (5% inferior de ventas).",
+    "hbt_description": "Este análisis categoriza sus productos en Head (superior 30% de ventas), Belly (nivel medio) y Tail (inferior 5% de ventas).",
     "cumulative_graph": "Gráfico Acumulativo HBT",
     "hbt_distribution": "Distribución HBT",
-    "product_list": "Clasificación de Productos",
+    "product_list": "Listado de Productos",
     "search_products": "Buscar Productos",
     "download_full_report": "Descargar Informe Completo",
-    "head_products": "Productos Head",
-    "belly_products": "Productos Belly",
-    "tail_products": "Productos Tail",
+    "head_products": "Productos Head (Cabeza)",
+    "belly_products": "Productos Belly (Vientre)",
+    "tail_products": "Productos Tail (Cola)",
     "class": "Clase",
-    "head": "Head",
-    "belly": "Belly",
-    "tail": "Tail",
+    "head": "Head(Cabeza)",
+    "belly": "Belly(Vientre)",
+    "tail": "Tail(Cola)",
     "products": "Productos",
     "sales": "Ventas",
     "inventory": "Inventario",
     
     # Misdistribution Analysis Tab
-    "misdistribution_title": "Análisis de Mala Distribución",
+    "misdistribution_title": "Oportunidades en la Distribución",
     "lead_time_days": "Tiempo de Entrega (Días)",
     "location_inventory": "Inventario por Ubicación",
     "inventory_distribution": "Distribución de Inventario",
-    "misdistribution_metrics": "Métricas de Mala Distribución",
+    "misdistribution_metrics": "Métricas de oportunidades en la Distribución",
     "target_adjustment": "Ajuste de Objetivo",
-    "redistribution_opportunities": "Oportunidades de Redistribución",
+    "redistribution_opportunities": "Oportunidades de de una mejor distribución",
     "from_location": "Desde Ubicación",
-    "to_location": "A Ubicación",
+    "to_location": "Hacia Ubicación",
     "units_to_move": "Unidades a Mover",
     "value_to_move": "Valor a Mover",
     "current_inventory": "Inventario Actual",
     "target_inventory": "Inventario Objetivo",
-    "inventory_gap": "Brecha de Inventario",
+    "inventory_gap": "Inventario Faltante",
     "inventory_surplus": "Excedente de Inventario",
     "inventory_days": "Días de Inventario",
-    "unlimited_days": "Ilimitado",
+    "unlimited_days": "Días Ilimitado",
     "update_lead_time": "Actualizar Tiempo de Entrega",
     "days": "días",
-    "last_updated": "Actualizado a las",
+    "last_updated": "Última actualización:",
     
     # Store Analysis Tab
     "store_title": "Análisis de Tiendas",
     "store_inventory": "Inventario de Tienda",
     "store_sales": "Ventas de Tienda",
     "store_hbt_comparison": "Comparación HBT de Tiendas",
-    "inventory_value": "Valor de Inventario",
+    "inventory_value": "Valor del Inventario",
     "coverage": "Cobertura",
     "select_store": "Seleccionar Tienda",
     "all_stores": "Todas las Tiendas",
     "inventory_units": "Unidades de Inventario",
-    "sales_units": "Unidades de Ventas",
-    "store_metrics": "Detalles de Métricas de Tienda",
-    "download_store_data": "Descargar Datos de Análisis de Todas las Tiendas",
+    "sales_units": "Unidades de Vendidas",
+    "store_metrics": "Métricas de Tienda",
+    "download_store_data": "Descargar Datos de Tiendas",
     "no_data": "No hay datos disponibles para esta tienda",
     
     # Metrics and KPIs
     "total_units": "Unidades Totales",
     "total_value": "Valor Total",
     "average_coverage": "Cobertura Promedio",
-    "excess_inventory": "Exceso de Inventario",
+    "excess_inventory": "Inventario en Exceso",
     "shortage_inventory": "Escasez de Inventario",
     "average_days": "Días Promedio",
     
@@ -275,12 +275,12 @@ es_mx_translations = {
     
     # Alerts and Messages
     "data_loaded": "¡Datos cargados exitosamente!",
-    "mapping_complete": "Mapeo de columnas completado.",
-    "lead_time_updated": "¡Tiempo de entrega actualizado exitosamente!",
+    "mapping_complete": "Asignación de columnas completada.",
+    "lead_time_updated": "¡Tiempo de entrega actualizado!",
     "no_file_selected": "No se seleccionó ningún archivo. Por favor, cargue un archivo CSV.",
     "invalid_file": "Archivo inválido. Por favor, cargue un archivo CSV.",
-    "mapping_incomplete": "Por favor, complete todos los mapeos de columnas antes de continuar.",
-    "calculation_error": "Error en los cálculos. Por favor, verifique sus datos."
+    "mapping_incomplete": "Por favor, complete la asignación de todas las columnas antes de continuar.",
+    "calculation_error": "Error durante los cálculos. Por favor, revise sus datos."
 }
 
 # Dictionary mapping language codes to translation dictionaries
